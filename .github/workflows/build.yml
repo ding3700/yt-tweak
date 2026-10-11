@@ -1,0 +1,22 @@
+name: b
+"on":
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect
+        run: |
+          wc -l src/YTSplashKill.m
+          head -5 src/YTSplashKill.m
+      - name: Compile
+        run: |
+          set -e
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          clang -arch arm64 -fobjc-arc -dynamiclib -isysroot "$SDK" -miphoneos-version-min=14.0 src/YTSplashKill.m -o YTSplashKill.dylib -framework Foundation -framework UIKit -framework CoreMotion
+          file YTSplashKill.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YTSplashKill
+          path: YTSplashKill.dylib
