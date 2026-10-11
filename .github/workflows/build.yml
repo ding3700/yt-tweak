@@ -1,0 +1,29 @@
+ name: Build iOS Tweak
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile arm64 dylib
+        run: |
+          set -e
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "SDK=$SDK"
+          clang -arch arm64 -fobjc-arc -O2 -dynamiclib \
+            -isysroot "$SDK" \
+            -miphoneos-version-min=14.0 \
+            -install_name @rpath/YTSplashKill.dylib \
+            -Wl,-rpath,@executable_path/Frameworks \
+            -Wl,-rpath,@executable_path \
+            src/YTSplashKill.m -o YTSplashKill.dylib \
+            -framework Foundation -framework UIKit -framework CoreMotion
+          codesign -s - -f YTSplashKill.dylib
+          file YTSplashKill.dylib
+          ls -lh YTSplashKill.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YTSplashKill
+          path: YTSplashKill.dylib
